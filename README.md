@@ -1,7 +1,6 @@
 # postgres-inet
----
 [![Build Status](https://travis-ci.org/nuew/postgres-inet.svg?branch=master)](https://travis-ci.org/nuew/postgres-inet)
-[![Docs.rs](https://docs.rs/postgres-init/badge.svg)](https://docs.rs/postgres-init/)
+[![Docs.rs](https://docs.rs/postgres-inet/badge.svg)](https://docs.rs/postgres-inet/)
 [![Crates.io](https://img.shields.io/crates/v/postgres-inet.svg)](https://crates.io/crates/postgres-inet)
 [![License](https://img.shields.io/crates/l/postgres-inet.svg)]()
 
