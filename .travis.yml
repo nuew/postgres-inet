@@ -1,0 +1,10 @@
+language: rust
+rust:
+  - stable
+  - beta
+  - nightly
+addons:
+  postgresql: 9.4
+matrix:
+  allow_failures:
+    - rust: nightly
