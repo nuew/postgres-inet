@@ -1,6 +1,6 @@
 [package]
 name = "postgres-inet"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Nuew <code@nuew.net>"]
 license = "Apache-2.0"
 description = "Cidr and Inet support for postgres (unofficial)"
