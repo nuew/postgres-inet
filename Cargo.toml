@@ -9,6 +9,9 @@ documentation = "https://docs.rs/postgres-inet/0.1.0/postgres-inet"
 readme = "README.md"
 keywords = ["database", "postgres", "postgresql", "sql"]
 
+[badges]
+travis-ci = { repository = "nuew/postgres-inet", branch = "master" }
+
 [dependencies]
 byteorder = "1.0"
 libc = "0.2"
