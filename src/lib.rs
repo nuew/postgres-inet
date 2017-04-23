@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Provides Cidr and Inet support for
-//! [`postgres`](https://crates.io/crates/postgres).
+//! Provides Cidr and Inet support for [`postgres`][1].
 //!
 //! Unlike several other names of this pattern, this is not affiliated
-//! with or supported by the [author](https://github.com/sfackler) of
-//! `postgres`.
+//! with or supported by the [author][2] of [`postgres`][1].
 //!
 //! Please see the `examples/` folder in the crate root for a simple example.
+//!
+//! [1]: https://crates.io/crates/postgres
+//! [2]: https://github.com/sfackler
 #![doc(html_root_url="https://docs.rs/postgres-inet/0.1.0")]
 #![warn(missing_docs)]
 
@@ -63,7 +64,7 @@ impl MaskedIpAddr {
     ///
     /// To represent an address:
     ///
-    /// ```
+    /// ```rust
     /// # use postgres_inet::MaskedIpAddr;
     /// # use std::net::Ipv4Addr;
     /// let ip = Ipv4Addr::new(192, 0, 2, 142);
@@ -72,7 +73,7 @@ impl MaskedIpAddr {
     ///
     /// To represent a network:
     ///
-    /// ```
+    /// ```rust
     /// # use postgres_inet::MaskedIpAddr;
     /// # use std::net::Ipv6Addr;
     /// let network = Ipv6Addr::new(0x2001, 0x0DB8, 0, 0, 0, 0, 0, 0);
@@ -98,7 +99,7 @@ impl MaskedIpAddr {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust
     /// # use postgres_inet::MaskedIpAddr;
     /// # use std::net::{Ipv4Addr, Ipv6Addr};
     /// assert!(MaskedIpAddr::new(Ipv4Addr::new(0, 0, 0, 0), 32).is_unspecified());
@@ -112,7 +113,7 @@ impl MaskedIpAddr {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust
     /// # use postgres_inet::MaskedIpAddr;
     /// # use std::net::{Ipv4Addr, Ipv6Addr};
     /// assert!(MaskedIpAddr::new(Ipv4Addr::new(127, 0, 0, 1), 32).is_loopback());
@@ -126,7 +127,7 @@ impl MaskedIpAddr {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust
     /// # use postgres_inet::MaskedIpAddr;
     /// # use std::net::{Ipv4Addr, Ipv6Addr};
     /// assert!(MaskedIpAddr::new(Ipv4Addr::new(224, 254, 0, 0), 32).is_multicast());
@@ -140,7 +141,7 @@ impl MaskedIpAddr {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```rust
     /// # use postgres_inet::MaskedIpAddr;
     /// # use std::net::Ipv4Addr;
     /// let network = Ipv4Addr::new(198, 51, 100, 0);
