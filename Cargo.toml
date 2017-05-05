@@ -1,11 +1,11 @@
 [package]
 name = "postgres-inet"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Nuew <code@nuew.net>"]
 license = "Apache-2.0"
 description = "Cidr and Inet support for postgres (unofficial)"
 repository = "https://github.com/nuew/postgres-inet"
-documentation = "https://docs.rs/postgres-inet/0.1.1/postgres-inet"
+documentation = "https://docs.rs/postgres-inet/0.1.2/postgres-inet"
 readme = "README.md"
 keywords = ["database", "postgres", "postgresql", "sql"]
 
