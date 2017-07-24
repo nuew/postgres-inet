@@ -13,6 +13,6 @@ keywords = ["database", "postgres", "postgresql", "sql"]
 travis-ci = { repository = "nuew/postgres-inet", branch = "master" }
 
 [dependencies]
-byteorder = "1.0"
+byteorder = "1"
 libc = "0.2"
 postgres = "0.15"
