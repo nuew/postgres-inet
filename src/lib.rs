@@ -21,7 +21,7 @@
 //!
 //! [1]: https://crates.io/crates/postgres
 //! [2]: https://github.com/sfackler
-#![doc(html_root_url="https://docs.rs/postgres-inet/0.1.2")]
+#![doc(html_root_url="https://docs.rs/postgres-inet")]
 #![warn(missing_docs)]
 
 #[macro_use]
@@ -32,7 +32,7 @@ extern crate libc;
 
 mod tests;
 
-use postgres::types::{Type, ToSql, FromSql, IsNull};
+use postgres::types::{self, Type, ToSql, FromSql, IsNull};
 use std::error::Error;
 use std::fmt;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
@@ -251,7 +251,7 @@ impl FromSql for MaskedIpAddr {
 
     fn accepts(ty: &Type) -> bool {
         match *ty {
-            Type::Cidr | Type::Inet => true,
+            types::CIDR | types::INET => true,
             _ => false,
         }
     }
@@ -267,8 +267,8 @@ impl ToSql for MaskedIpAddr {
         });
         w.push(self.mask); // Subnet mask
         w.push(match *ty { // cidr
-            Type::Cidr => true as u8,
-            Type::Inet => false as u8,
+            types::CIDR => true as u8,
+            types::INET => false as u8,
             _ => unreachable!(),
         });
         w.push(match self.addr {
@@ -283,6 +283,6 @@ impl ToSql for MaskedIpAddr {
         Ok(IsNull::No)
     }
 
-    accepts!(Type::Cidr, Type::Inet);
+    accepts!(types::CIDR, types::INET);
     to_sql_checked!();
 }
