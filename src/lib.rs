@@ -28,7 +28,6 @@
 extern crate postgres;
 
 extern crate byteorder;
-extern crate libc;
 
 mod tests;
 
@@ -38,11 +37,12 @@ use std::fmt;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 const IPV4_NETMASK_FULL: u8 = 32;
-const IPV4_ADDRESS_FAMILY: u8 = ::libc::AF_INET as u8;
+const IPV4_ADDRESS_FAMILY: u8 = 2; // Should be AF_INET; See Issue #1
 const IPV4_ADDRESS_SIZE: u8 = 4;
 
 const IPV6_NETMASK_FULL: u8 = 128;
-const IPV6_ADDRESS_FAMILY: u8 = (::libc::AF_INET + 1) as u8;
+// AF_INET + 1, not AF_INET6; see postgres src/include/utils/inet.h
+const IPV6_ADDRESS_FAMILY: u8 = 3;
 const IPV6_ADDRESS_SIZE: u8 = 16;
 
 #[derive(Clone, Eq, PartialEq, Hash, PartialOrd, Ord)]
