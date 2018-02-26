@@ -276,8 +276,8 @@ impl ToSql for MaskedIpAddr {
             IpAddr::V6(_) => IPV6_ADDRESS_SIZE,
         });
         match self.addr { // Luckily, ipv6.octets() outputs in Network Byte Order.
-            IpAddr::V4(ipv4) => w.append(&mut ipv4.octets().to_vec()),
-            IpAddr::V6(ipv6) => w.append(&mut ipv6.octets().to_vec()),
+            IpAddr::V4(ipv4) => w.extend_from_slice(&ipv4.octets()),
+            IpAddr::V6(ipv6) => w.extend_from_slice(&ipv6.octets()),
         };
 
         Ok(IsNull::No)
