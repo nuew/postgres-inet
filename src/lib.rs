@@ -21,7 +21,7 @@
 //!
 //! [1]: https://crates.io/crates/postgres
 //! [2]: https://github.com/sfackler
-#![doc(html_root_url="https://docs.rs/postgres-inet")]
+#![doc(html_root_url = "https://docs.rs/postgres-inet")]
 #![warn(missing_docs)]
 
 #[macro_use]
@@ -31,7 +31,7 @@ extern crate byteorder;
 
 mod tests;
 
-use postgres::types::{self, Type, ToSql, FromSql, IsNull};
+use postgres::types::{self, FromSql, IsNull, ToSql, Type};
 use std::error::Error;
 use std::fmt;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
@@ -193,20 +193,15 @@ impl From<MaskedIpAddr> for IpAddr {
 impl fmt::Display for MaskedIpAddr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.addr {
-            IpAddr::V4(ipv4) => {
-                match self.mask {
-                    IPV4_NETMASK_FULL => ipv4.fmt(f),
-                    _ => write!(f, "{}/{}", ipv4, self.mask),
-                }
-            }
-            IpAddr::V6(ipv6) => {
-                match self.mask {
-                    IPV6_NETMASK_FULL => ipv6.fmt(f),
-                    _ => write!(f, "{}/{}", ipv6, self.mask),
-                }
-            }
+            IpAddr::V4(ipv4) => match self.mask {
+                IPV4_NETMASK_FULL => ipv4.fmt(f),
+                _ => write!(f, "{}/{}", ipv4, self.mask),
+            },
+            IpAddr::V6(ipv6) => match self.mask {
+                IPV6_NETMASK_FULL => ipv6.fmt(f),
+                _ => write!(f, "{}/{}", ipv6, self.mask),
+            },
         }
-
     }
 }
 
@@ -234,14 +229,16 @@ impl FromSql for MaskedIpAddr {
 
                     let mut raw = raw;
                     raw.read_exact(&mut [0u8; 4])?; // throw away the first four bytes
-                    IpAddr::V6(Ipv6Addr::new(raw.read_u16::<NetworkEndian>()?,
-                                             raw.read_u16::<NetworkEndian>()?,
-                                             raw.read_u16::<NetworkEndian>()?,
-                                             raw.read_u16::<NetworkEndian>()?,
-                                             raw.read_u16::<NetworkEndian>()?,
-                                             raw.read_u16::<NetworkEndian>()?,
-                                             raw.read_u16::<NetworkEndian>()?,
-                                             raw.read_u16::<NetworkEndian>()?))
+                    IpAddr::V6(Ipv6Addr::new(
+                        raw.read_u16::<NetworkEndian>()?,
+                        raw.read_u16::<NetworkEndian>()?,
+                        raw.read_u16::<NetworkEndian>()?,
+                        raw.read_u16::<NetworkEndian>()?,
+                        raw.read_u16::<NetworkEndian>()?,
+                        raw.read_u16::<NetworkEndian>()?,
+                        raw.read_u16::<NetworkEndian>()?,
+                        raw.read_u16::<NetworkEndian>()?,
+                    ))
                 }
                 _ => panic!("Unknown Internet Protocol Version!"),
             },
@@ -261,12 +258,14 @@ impl ToSql for MaskedIpAddr {
     fn to_sql(&self, ty: &Type, w: &mut Vec<u8>) -> Result<IsNull, Box<Error + Sync + Send>> {
         // We're relying on the optimizer to clean this up.
 
-        w.push(match self.addr { // Address Family
+        w.push(match self.addr {
+            // Address Family
             IpAddr::V4(_) => IPV4_ADDRESS_FAMILY,
             IpAddr::V6(_) => IPV6_ADDRESS_FAMILY,
         });
         w.push(self.mask); // Subnet mask
-        w.push(match *ty { // cidr
+        w.push(match *ty {
+            // cidr
             types::CIDR => true as u8,
             types::INET => false as u8,
             _ => unreachable!(),
@@ -275,7 +274,8 @@ impl ToSql for MaskedIpAddr {
             IpAddr::V4(_) => IPV4_ADDRESS_SIZE,
             IpAddr::V6(_) => IPV6_ADDRESS_SIZE,
         });
-        match self.addr { // Luckily, ipv6.octets() outputs in Network Byte Order.
+        match self.addr {
+            // Luckily, ipv6.octets() outputs in Network Byte Order.
             IpAddr::V4(ipv4) => w.extend_from_slice(&ipv4.octets()),
             IpAddr::V6(ipv6) => w.extend_from_slice(&ipv6.octets()),
         };
