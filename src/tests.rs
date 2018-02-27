@@ -487,3 +487,15 @@ fn inet_insert_and_select_masked_ipv6() {
         .get(0);
     assert_eq!(mip, mip_b);
 }
+
+#[test]
+fn masked_ip_send() {
+    fn assert_send<T: Send>() {}
+    assert_send::<MaskedIpAddr>();
+}
+
+#[test]
+fn masked_ip_sync() {
+    fn assert_sync<T: Send>() {}
+    assert_sync::<MaskedIpAddr>();
+}
