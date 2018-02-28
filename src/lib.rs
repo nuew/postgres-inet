@@ -45,7 +45,7 @@ const IPV6_NETMASK_FULL: u8 = 128;
 const IPV6_ADDRESS_FAMILY: u8 = 3;
 const IPV6_ADDRESS_SIZE: u8 = 16;
 
-#[derive(Clone, Eq, PartialEq, Hash, PartialOrd, Ord)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, PartialOrd, Ord)]
 /// An IP address with a netmask.
 pub struct MaskedIpAddr {
     addr: IpAddr,
@@ -57,8 +57,11 @@ impl MaskedIpAddr {
     ///
     /// # Panics
     ///
-    /// Panics if the netmask is greater than 32 for an IPv4 address, or is
-    /// greater than 128 for an IPv6 address.
+    /// Panics if the netmask is greater than 32 for an [IPv4 address], or is
+    /// greater than 128 for an [IPv6 address].
+    ///
+    /// [IPv4 address]: https://doc.rust-lang.org/std/net/enum.IpAddr.html#variant.V4
+    /// [IPv6 address]: https://doc.rust-lang.org/std/net/enum.IpAddr.html#variant.V6
     ///
     /// # Examples
     ///
@@ -86,7 +89,7 @@ impl MaskedIpAddr {
             IpAddr::V4(_) => mask > IPV4_NETMASK_FULL,
             IpAddr::V6(_) => mask > IPV6_NETMASK_FULL,
         } {
-            panic!("Mask too big for IP type!");
+            panic!("Mask {} too big for {:?}!", mask, addr);
         }
 
         MaskedIpAddr {
@@ -95,7 +98,14 @@ impl MaskedIpAddr {
         }
     }
 
-    /// Returns true for the special 'unspecified' address.
+    /// Returns [`true`] for the special 'unspecified' address.
+    ///
+    /// See the documentation for [`Ipv4Addr::is_unspecified`][IPv4] and
+    /// [`Ipv6Addr::is_unspecified`][IPv6] for more details.
+    ///
+    /// [`true`]: https://doc.rust-lang.org/std/primitive.bool.html
+    /// [IPv4]: https://doc.rust-lang.org/std/net/struct.Ipv4Addr.html#method.is_unspecified
+    /// [IPv6]: https://doc.rust-lang.org/std/net/struct.Ipv6Addr.html#method.is_unspecified
     ///
     /// # Examples
     ///
@@ -109,7 +119,15 @@ impl MaskedIpAddr {
         self.addr.is_unspecified()
     }
 
-    /// Returns true if this is a loopback address.
+    /// Returns [`true`] if this is a loopback address.
+    ///
+    /// See the documentation for [`Ipv4Addr::is_loopback`][IPv4] and
+    /// [`Ipv6Addr::is_loopback`][IPv6] for more details.
+    ///
+    /// [`true`]: https://doc.rust-lang.org/std/primitive.bool.html
+    /// [IPv4]: https://doc.rust-lang.org/std/net/struct.Ipv4Addr.html#method.is_loopback
+    /// [IPv6]: https://doc.rust-lang.org/std/net/struct.Ipv6Addr.html#method.is_loopback
+    ///
     ///
     /// # Examples
     ///
@@ -123,7 +141,14 @@ impl MaskedIpAddr {
         self.addr.is_loopback()
     }
 
-    /// Returns true if this is a multicast address.
+    /// Returns [`true`] if this is a multicast address.
+    ///
+    /// See the documentation for [`Ipv4Addr::is_multicast`][IPv4] and
+    /// [`Ipv6Addr::is_multicast`][IPv6] for more details.
+    ///
+    /// [`true`]: https://doc.rust-lang.org/std/primitive.bool.html
+    /// [IPv4]: https://doc.rust-lang.org/std/net/struct.Ipv4Addr.html#method.is_multicast
+    /// [IPv6]: https://doc.rust-lang.org/std/net/struct.Ipv6Addr.html#method.is_multicast
     ///
     /// # Examples
     ///
@@ -137,6 +162,74 @@ impl MaskedIpAddr {
         self.addr.is_multicast()
     }
 
+    /// Returns [`true`] if this address is an [IPv4 address], and [`false`] otherwise.
+    ///
+    /// [`true`]: https://doc.rust-lang.org/std/primitive.bool.html
+    /// [`false`]: https://doc.rust-lang.org/std/primitive.bool.html
+    /// [IPv4 address]: https://doc.rust-lang.org/std/net/enum.IpAddr.html#variant.V4
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use postgres_inet::MaskedIpAddr;
+    /// # use std::net::{Ipv4Addr, Ipv6Addr};
+    /// assert!(MaskedIpAddr::new(Ipv4Addr::new(203, 0, 113, 6), 32).is_ipv4());
+    /// assert!(!MaskedIpAddr::new(Ipv6Addr::new(0x2001, 0xdb8, 0, 0, 0, 0, 0, 0), 128).is_ipv4());
+    /// ```
+    pub fn is_ipv4(&self) -> bool {
+        self.addr.is_ipv4()
+    }
+
+    /// Returns [`true`] if this address is an [IPv6 address], and [`false`] otherwise.
+    ///
+    /// [`true`]: https://doc.rust-lang.org/std/primitive.bool.html
+    /// [`false`]: https://doc.rust-lang.org/std/primitive.bool.html
+    /// [IPv4 address]: https://doc.rust-lang.org/std/net/enum.IpAddr.html#variant.V6
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use postgres_inet::MaskedIpAddr;
+    /// # use std::net::{Ipv4Addr, Ipv6Addr};
+    /// assert!(!MaskedIpAddr::new(Ipv4Addr::new(203, 0, 113, 6), 32).is_ipv6());
+    /// assert!(MaskedIpAddr::new(Ipv6Addr::new(0x2001, 0xdb8, 0, 0, 0, 0, 0, 0), 128).is_ipv6());
+    /// ```
+    pub fn is_ipv6(&self) -> bool {
+        self.addr.is_ipv6()
+    }
+
+    /// Returns the contained [IP address].
+    ///
+    /// [IP address]: https://doc.rust-lang.org/std/net/enum.IpAddr.html
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use postgres_inet::MaskedIpAddr;
+    /// # use std::net::{Ipv4Addr, Ipv6Addr};
+    /// let ip = Ipv4Addr::new(192, 0, 2, 142);
+    /// assert_eq!(MaskedIpAddr::new(ip, 32).address(), ip);
+    /// let network = Ipv6Addr::new(0x2001, 0x0DB8, 0, 0, 0, 0, 0, 0);
+    /// assert_eq!(MaskedIpAddr::new(network, 32).address(), network);
+    /// ```
+    pub fn address(&self) -> IpAddr {
+        self.addr
+    }
+
+    /// Returns the contained netmask.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use postgres_inet::MaskedIpAddr;
+    /// # use std::net::{Ipv4Addr, Ipv6Addr};
+    /// assert_eq!(MaskedIpAddr::new(Ipv4Addr::new(192, 0, 2, 142), 32).netmask(), 32);
+    /// assert_eq!(MaskedIpAddr::new(Ipv6Addr::new(0x2001, 0x0DB8, 0, 0, 0, 0, 0, 0), 64).netmask(), 64);
+    /// ```
+    pub fn netmask(&self) -> u8 {
+        self.mask
+    }
+
     /// Consumes the `MaskedIpAddr`, returning the IP address and netmask.
     ///
     /// # Examples
@@ -145,9 +238,7 @@ impl MaskedIpAddr {
     /// # use postgres_inet::MaskedIpAddr;
     /// # use std::net::Ipv4Addr;
     /// let network = Ipv4Addr::new(198, 51, 100, 0);
-    /// let (network_b, netmask) = MaskedIpAddr::new(network.clone(), 24).into_inner();
-    /// assert_eq!(network, network_b);
-    /// assert_eq!(netmask, 24);
+    /// assert_eq!(MaskedIpAddr::new(network, 24).into_inner(), (network.into(), 24));
     /// ```
     pub fn into_inner(self) -> (IpAddr, u8) {
         (self.addr, self.mask)
@@ -187,6 +278,24 @@ impl From<IpAddr> for MaskedIpAddr {
 impl From<MaskedIpAddr> for IpAddr {
     fn from(mip: MaskedIpAddr) -> IpAddr {
         mip.addr
+    }
+}
+
+impl From<[u8; 4]> for MaskedIpAddr {
+    fn from(octets: [u8; 4]) -> MaskedIpAddr {
+        IpAddr::from(octets).into()
+    }
+}
+
+impl From<[u8; 16]> for MaskedIpAddr {
+    fn from(octets: [u8; 16]) -> MaskedIpAddr {
+        IpAddr::from(octets).into()
+    }
+}
+
+impl From<[u16; 8]> for MaskedIpAddr {
+    fn from(segments: [u16; 8]) -> MaskedIpAddr {
+        IpAddr::from(segments).into()
     }
 }
 

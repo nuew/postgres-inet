@@ -165,21 +165,63 @@ fn is_multi_ipv6_false() {
 }
 
 #[test]
+fn is_ipv4_ipv4() {
+    let (mip, _, _) = _new_full_ipv4();
+    assert!(mip.is_ipv4());
+}
+
+#[test]
+fn is_ipv4_ipv6() {
+    let (mip, _, _) = _new_full_ipv6();
+    assert!(!mip.is_ipv4());
+}
+
+#[test]
+fn is_ipv6_ipv4() {
+    let (mip, _, _) = _new_full_ipv4();
+    assert!(!mip.is_ipv6());
+}
+
+#[test]
+fn is_ipv6_ipv6() {
+    let (mip, _, _) = _new_full_ipv6();
+    assert!(mip.is_ipv6());
+}
+
+#[test]
+fn address_ipv4() {
+    let (mip, expected, _) = _new_full_ipv4();
+    assert_eq!(mip.address(), expected);
+}
+
+#[test]
+fn address_ipv6() {
+    let (mip, expected, _) = _new_full_ipv6();
+    assert_eq!(mip.address(), expected);
+}
+
+#[test]
+fn netmask_ipv4() {
+    let (mip, _, netmask) = _new_full_ipv4();
+    assert_eq!(mip.netmask(), netmask);
+}
+
+#[test]
+fn netmask_ipv6() {
+    let (mip, _, netmask) = _new_full_ipv6();
+    assert_eq!(mip.netmask(), netmask);
+}
+
+#[test]
 fn into_inner_ipv4() {
     let (mip, expected, mask) = _new_full_ipv4();
-    let (expected_b, mask_b) = mip.into_inner();
-
-    assert_eq!(expected, expected_b);
-    assert_eq!(mask, mask_b);
+    assert_eq!(mip.into_inner(), (expected, mask));
 }
 
 #[test]
 fn into_inner_ipv6() {
     let (mip, expected, mask) = _new_full_ipv6();
-    let (expected_b, mask_b) = mip.into_inner();
-
-    assert_eq!(expected, expected_b);
-    assert_eq!(mask, mask_b);
+    assert_eq!(mip.into_inner(), (expected, mask));
 }
 
 #[test]
@@ -187,21 +229,19 @@ fn new_from_ipv4() {
     let ipv4 = Ipv4Addr::new(198, 51, 100, 255);
     let mask = IPV4_NETMASK_FULL;
 
-    let (ipv4_b, mask_b) = MaskedIpAddr::new(ipv4, mask).into_inner();
-
-    assert_eq!(ipv4, ipv4_b);
-    assert_eq!(mask, mask_b);
+    assert_eq!(
+        MaskedIpAddr::new(ipv4, mask).into_inner(),
+        (ipv4.into(), mask)
+    );
 }
 
 #[test]
 fn from_ipv4_to_mip() {
     let ipv4 = Ipv4Addr::new(198, 51, 100, 255);
-
-    let mip: MaskedIpAddr = From::from(ipv4);
-    let (ipv4_b, mask) = mip.into_inner();
-
-    assert_eq!(ipv4, ipv4_b);
-    assert_eq!(mask, IPV4_NETMASK_FULL);
+    assert_eq!(
+        MaskedIpAddr::from(ipv4).into_inner(),
+        (ipv4.into(), IPV4_NETMASK_FULL)
+    );
 }
 
 #[test]
@@ -209,21 +249,19 @@ fn new_from_ipv6() {
     let ipv6 = Ipv6Addr::new(0x2001, 0xDB8, 0, 0, 0, 0, 0, 0);
     let mask = IPV6_NETMASK_FULL;
 
-    let (ipv6_b, mask_b) = MaskedIpAddr::new(ipv6, mask).into_inner();
-
-    assert_eq!(ipv6, ipv6_b);
-    assert_eq!(mask, mask_b);
+    assert_eq!(
+        MaskedIpAddr::new(ipv6, mask).into_inner(),
+        (ipv6.into(), mask)
+    );
 }
 
 #[test]
 fn from_ipv6_to_mip() {
     let ipv6 = Ipv6Addr::new(0x2001, 0xDB8, 0, 0, 0, 0, 0, 0);
-
-    let mip: MaskedIpAddr = From::from(ipv6);
-    let (ipv6_b, mask) = mip.into_inner();
-
-    assert_eq!(ipv6, ipv6_b);
-    assert_eq!(mask, IPV6_NETMASK_FULL);
+    assert_eq!(
+        MaskedIpAddr::from(ipv6).into_inner(),
+        (ipv6.into(), IPV6_NETMASK_FULL)
+    );
 }
 
 #[test]
@@ -231,76 +269,60 @@ fn new_from_ip() {
     let ip = IpAddr::V4(Ipv4Addr::new(203, 0, 113, 128));
     let mask = IPV4_NETMASK_FULL;
 
-    let (ip_b, mask_b) = MaskedIpAddr::new(ip, mask).into_inner();
-
-    assert_eq!(ip, ip_b);
-    assert_eq!(mask, mask_b);
+    assert_eq!(MaskedIpAddr::new(ip, mask).into_inner(), (ip, mask));
 }
 
 #[test]
 fn from_ip_to_mip() {
     let ip = IpAddr::V6(Ipv6Addr::new(0x2001, 0xDB8, 0, 0, 0, 0, 0, 0));
-
-    let mip: MaskedIpAddr = From::from(ip);
-    let (ip_b, mask) = mip.into_inner();
-
-    assert_eq!(ip, ip_b);
-    assert_eq!(mask, IPV6_NETMASK_FULL);
+    assert_eq!(MaskedIpAddr::from(ip).into_inner(), (ip, IPV6_NETMASK_FULL));
 }
 
 #[test]
 fn display_omit_netmask_when_full_ipv4() {
     let (mip, expected, _) = _new_full_ipv4();
-
     assert_eq!(format!("{}", mip), format!("{}", expected));
 }
 
 #[test]
 fn display_omit_netmask_when_full_ipv6() {
     let (mip, expected, _) = _new_full_ipv6();
-
     assert_eq!(format!("{}", mip), format!("{}", expected));
 }
 
 #[test]
 fn display_with_netmask_when_masked_ipv4() {
     let (mip, expected, mask) = _new_masked_ipv4();
-
     assert_eq!(format!("{}", mip), format!("{}/{}", expected, mask));
 }
 
 #[test]
 fn display_with_netmask_when_masked_ipv6() {
     let (mip, expected, mask) = _new_masked_ipv6();
-
     assert_eq!(format!("{}", mip), format!("{}/{}", expected, mask));
 }
 
 #[test]
 fn debug_with_netmask_when_full_ipv4() {
     let (mip, expected, mask) = _new_full_ipv4();
-
     assert_eq!(format!("{:?}", mip), format!("{}/{}", expected, mask));
 }
 
 #[test]
 fn debug_with_netmask_when_full_ipv6() {
     let (mip, expected, mask) = _new_full_ipv6();
-
     assert_eq!(format!("{:?}", mip), format!("{}/{}", expected, mask));
 }
 
 #[test]
 fn debug_with_netmask_when_masked_ipv4() {
     let (mip, expected, mask) = _new_masked_ipv4();
-
     assert_eq!(format!("{:?}", mip), format!("{}/{}", expected, mask));
 }
 
 #[test]
 fn debug_with_netmask_when_masked_ipv6() {
     let (mip, expected, mask) = _new_masked_ipv6();
-
     assert_eq!(format!("{:?}", mip), format!("{}/{}", expected, mask));
 }
 
