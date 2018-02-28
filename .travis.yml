@@ -4,7 +4,7 @@ rust:
   - beta
   - nightly
 addons:
-  postgresql: 9.4
+  postgresql: 10.2
 matrix:
   allow_failures:
     - rust: nightly
