@@ -84,6 +84,21 @@ fn new_masked_ipv6() {
 }
 
 #[test]
+#[should_panic]
+fn new_overfull_ipv4() {
+    MaskedIpAddr::new(IpAddr::V4(Ipv4Addr::new(192, 0, 2, 0)), 0x7F);
+}
+
+#[test]
+#[should_panic]
+fn new_overfull_ipv6() {
+    MaskedIpAddr::new(
+        IpAddr::V6(Ipv6Addr::new(0x2001, 0xDB8, 0, 0, 0, 0, 0, 0)),
+        0xFF,
+    );
+}
+
+#[test]
 fn is_unspec_ipv4() {
     let mip = MaskedIpAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), IPV4_NETMASK_FULL);
     assert!(mip.is_unspecified());
