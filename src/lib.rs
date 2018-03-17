@@ -97,10 +97,7 @@ impl MaskedIpAddr {
             panic!("Mask {} too big for {:?}!", mask, addr);
         }
 
-        MaskedIpAddr {
-            addr: addr,
-            mask: mask,
-        }
+        MaskedIpAddr { addr, mask }
     }
 
     /// Returns [`true`] for the special 'unspecified' address.
