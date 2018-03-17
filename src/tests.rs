@@ -279,6 +279,44 @@ fn from_ip_to_mip() {
 }
 
 #[test]
+#[cfg(feature = "ipnetwork")]
+fn from_ipnetwork_to_mip_ipv4() {
+    let (mip, ip, mask) = _new_full_ipv4();
+    let ipn = ipnetwork::IpNetwork::new(ip, mask).unwrap();
+
+    assert_eq!(mip, MaskedIpAddr::from(ipn));
+}
+
+#[test]
+#[cfg(feature = "ipnetwork")]
+fn from_ipnetwork_to_mip_ipv6() {
+    let (mip, ip, mask) = _new_full_ipv6();
+    let ipn = ipnetwork::IpNetwork::new(ip, mask).unwrap();
+
+    assert_eq!(mip, MaskedIpAddr::from(ipn));
+}
+
+#[test]
+#[cfg(feature = "ipnetwork")]
+fn from_mip_to_ipnetwork_ipv4() {
+    let (mip, expected, mask) = _new_full_ipv4();
+    let ipn = ipnetwork::IpNetwork::from(mip);
+
+    assert_eq!(ipn.ip(), expected);
+    assert_eq!(ipn.prefix(), mask);
+}
+
+#[test]
+#[cfg(feature = "ipnetwork")]
+fn from_mip_to_ipnetwork_ipv6() {
+    let (mip, expected, mask) = _new_full_ipv6();
+    let ipn = ipnetwork::IpNetwork::from(mip);
+
+    assert_eq!(ipn.ip(), expected);
+    assert_eq!(ipn.prefix(), mask);
+}
+
+#[test]
 fn display_omit_netmask_when_full_ipv4() {
     let (mip, expected, _) = _new_full_ipv4();
     assert_eq!(format!("{}", mip), format!("{}", expected));
