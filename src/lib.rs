@@ -24,6 +24,9 @@
 #![doc(html_root_url = "https://docs.rs/postgres-inet")]
 #![warn(missing_docs)]
 
+#[cfg(feature = "ipnetwork")]
+extern crate ipnetwork;
+
 #[macro_use]
 extern crate postgres;
 
@@ -296,6 +299,21 @@ impl From<[u8; 16]> for MaskedIpAddr {
 impl From<[u16; 8]> for MaskedIpAddr {
     fn from(segments: [u16; 8]) -> MaskedIpAddr {
         IpAddr::from(segments).into()
+    }
+}
+
+#[cfg(feature = "ipnetwork")]
+impl From<ipnetwork::IpNetwork> for MaskedIpAddr {
+    fn from(ipnetwork: ipnetwork::IpNetwork) -> MaskedIpAddr {
+        MaskedIpAddr::new(ipnetwork.ip(), ipnetwork.prefix())
+    }
+}
+
+#[cfg(feature = "ipnetwork")]
+impl From<MaskedIpAddr> for ipnetwork::IpNetwork {
+    fn from(mip: MaskedIpAddr) -> ipnetwork::IpNetwork {
+        // this conversion will never fail
+        ipnetwork::IpNetwork::new(mip.address(), mip.netmask()).unwrap()
     }
 }
 
