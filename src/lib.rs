@@ -22,6 +22,8 @@
 //! [1]: https://crates.io/crates/postgres
 //! [2]: https://github.com/sfackler
 #![doc(html_root_url = "https://docs.rs/postgres-inet")]
+#![cfg_attr(feature = "clippy", feature(plugin))]
+#![cfg_attr(feature = "clippy", plugin(clippy))]
 #![warn(missing_docs)]
 
 #[cfg(feature = "ipnetwork")]

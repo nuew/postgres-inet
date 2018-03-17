@@ -14,5 +14,6 @@ travis-ci = { repository = "nuew/postgres-inet", branch = "master" }
 
 [dependencies]
 byteorder = "1"
-postgres = "0.15"
+clippy = { version = "0", optional = true }
 ipnetwork = { version = "0.12", optional = true }
+postgres = "0.15"
