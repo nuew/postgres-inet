@@ -15,7 +15,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-postgres-inet = "0.1"
+postgres-inet = "0.15"
 ```
 
 ## Usage
