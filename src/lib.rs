@@ -39,7 +39,9 @@ mod tests;
 use postgres::types::{self, FromSql, IsNull, ToSql, Type};
 use std::error::Error;
 use std::fmt;
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+use std::net::{AddrParseError, IpAddr, Ipv4Addr, Ipv6Addr};
+use std::num::ParseIntError;
+use std::str::FromStr;
 
 const IPV4_NETMASK_FULL: u8 = 32;
 const IPV4_ADDRESS_FAMILY: u8 = 2; // Should be AF_INET; See Issue #1
@@ -412,3 +414,66 @@ impl ToSql for MaskedIpAddr {
     accepts!(types::CIDR, types::INET);
     to_sql_checked!();
 }
+
+/// An error which can be returned when parsing a [`MaskedIpAddr`].
+///
+/// [`MaskedIpAddr`]: struct.MaskedIpAddr.html
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum MaskedIpAddrParseError {
+    /// An error occured in parsing the IP address
+    Address(AddrParseError),
+    /// An error occured in parsing the netmask
+    Netmask(ParseIntError),
+    /// An error occured elsewhere in parsing
+    Format
+}
+
+impl fmt::Display for MaskedIpAddrParseError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            MaskedIpAddrParseError::Address(ref e) => e.fmt(f),
+            MaskedIpAddrParseError::Netmask(ref e) => e.fmt(f),
+            MaskedIpAddrParseError::Format => f.write_str(self.description()),
+        }
+    }
+}
+
+impl Error for MaskedIpAddrParseError {
+    fn description(&self) -> &str {
+        "invalid IP address/netmask syntax"
+    }
+
+    fn cause(&self) -> Option<&Error> {
+        match *self {
+            MaskedIpAddrParseError::Address(ref err) => Some(err),
+            MaskedIpAddrParseError::Netmask(ref err) => Some(err),
+            MaskedIpAddrParseError::Format => None,
+        }
+    }
+}
+
+impl From<AddrParseError> for MaskedIpAddrParseError {
+    fn from(from: AddrParseError) -> MaskedIpAddrParseError {
+        MaskedIpAddrParseError::Address(from)
+    }
+}
+
+impl From<ParseIntError> for MaskedIpAddrParseError {
+    fn from(from: ParseIntError) -> MaskedIpAddrParseError {
+        MaskedIpAddrParseError::Netmask(from)
+    }
+}
+
+impl FromStr for MaskedIpAddr {
+    type Err = MaskedIpAddrParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let parts: Vec<&str> = s.split('/').collect();
+        match parts.len() {
+            1 => Ok(IpAddr::from_str(parts[0])?.into()),
+            2 => Ok(MaskedIpAddr::new(IpAddr::from_str(parts[0])?, parts[1].parse()?)),
+            _ => Err(MaskedIpAddrParseError::Format)
+        }
+    }
+}
+

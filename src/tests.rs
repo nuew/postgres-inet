@@ -380,6 +380,40 @@ fn debug_with_netmask_when_masked_ipv6() {
 }
 
 #[test]
+fn from_string_to_full_ipv4() {
+    let (expected, addr, _) = _new_full_ipv4();
+    assert_eq!(addr.to_string().parse::<MaskedIpAddr>().unwrap(), expected);
+}
+
+#[test]
+fn from_string_to_full_ipv6() {
+    let (expected, addr, _) = _new_full_ipv6();
+    assert_eq!(addr.to_string().parse::<MaskedIpAddr>().unwrap(), expected);
+}
+
+#[test]
+fn from_string_to_masked_ipv4() {
+    let (expected, addr, mask) = _new_masked_ipv4();
+    assert_eq!(
+        format!("{}/{}", addr, mask)
+            .parse::<MaskedIpAddr>()
+            .unwrap(),
+        expected
+    );
+}
+
+#[test]
+fn from_string_to_masked_ipv6() {
+    let (expected, addr, mask) = _new_masked_ipv6();
+    assert_eq!(
+        format!("{}/{}", addr, mask)
+            .parse::<MaskedIpAddr>()
+            .unwrap(),
+        expected
+    );
+}
+
+#[test]
 fn cidr_insert_full_ipv4() {
     let (mip, _, _) = _new_full_ipv4();
     _db()
