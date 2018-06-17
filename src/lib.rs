@@ -22,7 +22,19 @@
 //! [1]: https://crates.io/crates/postgres
 //! [2]: https://github.com/sfackler
 #![doc(html_root_url = "https://docs.rs/postgres-inet/0.15.0")]
-#![warn(missing_docs)]
+#![deny(
+    missing_copy_implementations,
+    missing_debug_implementations,
+    missing_docs,
+    trivial_casts,
+    trivial_numeric_casts,
+    unsafe_code,
+    unstable_features,
+    unused_extern_crates,
+    unused_import_braces,
+    unused_qualifications,
+    unused_results,
+)]
 
 #[cfg(feature = "ipnetwork")]
 extern crate ipnetwork;

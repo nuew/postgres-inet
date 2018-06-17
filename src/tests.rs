@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #![cfg(test)]
+#![allow(unused_results)]
 
 use postgres::{Connection, TlsMode};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
