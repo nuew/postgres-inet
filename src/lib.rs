@@ -198,7 +198,7 @@ impl MaskedIpAddr {
     ///
     /// [`true`]: https://doc.rust-lang.org/std/primitive.bool.html
     /// [`false`]: https://doc.rust-lang.org/std/primitive.bool.html
-    /// [IPv4 address]: https://doc.rust-lang.org/std/net/enum.IpAddr.html#variant.V6
+    /// [IPv6 address]: https://doc.rust-lang.org/std/net/enum.IpAddr.html#variant.V6
     ///
     /// # Examples
     ///
