@@ -15,9 +15,9 @@
 #![cfg(test)]
 #![allow(unused_results)]
 
+use super::*;
 use postgres::{Connection, TlsMode};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
-use super::*;
 
 fn _db() -> Connection {
     let conn = Connection::connect("postgres://postgres@localhost", TlsMode::None).unwrap();

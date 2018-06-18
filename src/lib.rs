@@ -23,17 +23,9 @@
 //! [2]: https://github.com/sfackler
 #![doc(html_root_url = "https://docs.rs/postgres-inet/0.15.0")]
 #![deny(
-    missing_copy_implementations,
-    missing_debug_implementations,
-    missing_docs,
-    trivial_casts,
-    trivial_numeric_casts,
-    unsafe_code,
-    unstable_features,
-    unused_extern_crates,
-    unused_import_braces,
-    unused_qualifications,
-    unused_results,
+    missing_copy_implementations, missing_debug_implementations, missing_docs, trivial_casts,
+    trivial_numeric_casts, unsafe_code, unstable_features, unused_extern_crates,
+    unused_import_braces, unused_qualifications, unused_results
 )]
 
 #[cfg(feature = "ipnetwork")]
@@ -52,12 +44,12 @@ use std::num::ParseIntError;
 use std::str::FromStr;
 
 const IPV4_NETMASK_FULL: u8 = 32;
-const IPV4_ADDRESS_FAMILY: u8 = 2; // Should be AF_INET; See Issue #1
+const IPV4_ADDRESS_FAMILY: u8 = 2; // AF_INET (See Issue #1)
 const IPV4_ADDRESS_SIZE: u8 = 4;
 
 const IPV6_NETMASK_FULL: u8 = 128;
-// AF_INET + 1, not AF_INET6; see postgres src/include/utils/inet.h
-const IPV6_ADDRESS_FAMILY: u8 = 3;
+// Not AF_INET6; see postgres src/include/utils/inet.h
+const IPV6_ADDRESS_FAMILY: u8 = IPV4_ADDRESS_FAMILY + 1;
 const IPV6_ADDRESS_SIZE: u8 = 16;
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, PartialOrd, Ord)]
@@ -69,6 +61,9 @@ pub struct MaskedIpAddr {
 
 impl MaskedIpAddr {
     /// Creates a new `MaskedIpAddr` from components.
+    ///
+    /// Do not pass an `addr` with bits set to the right of the netmask if you
+    /// intend to insert this into a postgres `cidr` field.
     ///
     /// # Panics
     ///
@@ -414,7 +409,7 @@ pub enum MaskedIpAddrParseError {
     /// An error occured in parsing the netmask
     Netmask(ParseIntError),
     /// An error occured elsewhere in parsing
-    Format
+    Format,
 }
 
 impl fmt::Display for MaskedIpAddrParseError {
@@ -460,9 +455,11 @@ impl FromStr for MaskedIpAddr {
         let parts: Vec<&str> = s.split('/').collect();
         match parts.len() {
             1 => Ok(IpAddr::from_str(parts[0])?.into()),
-            2 => Ok(MaskedIpAddr::new(IpAddr::from_str(parts[0])?, parts[1].parse()?)),
-            _ => Err(MaskedIpAddrParseError::Format)
+            2 => Ok(MaskedIpAddr::new(
+                IpAddr::from_str(parts[0])?,
+                parts[1].parse()?,
+            )),
+            _ => Err(MaskedIpAddrParseError::Format),
         }
     }
 }
-
