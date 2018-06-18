@@ -42,8 +42,6 @@ extern crate ipnetwork;
 #[macro_use]
 extern crate postgres;
 
-extern crate byteorder;
-
 mod tests;
 
 use postgres::types::{self, FromSql, IsNull, ToSql, Type};
@@ -360,23 +358,9 @@ impl FromSql for MaskedIpAddr {
             addr: match raw[3] {
                 IPV4_ADDRESS_SIZE => IpAddr::V4(Ipv4Addr::new(raw[4], raw[5], raw[6], raw[7])),
                 IPV6_ADDRESS_SIZE => {
-                    // The IPv6 is sent in network byte order, so we need to convert it to the host
-                    // order.
-                    use byteorder::{NetworkEndian, ReadBytesExt};
-                    use std::io::Read;
-
-                    let mut raw = raw;
-                    raw.read_exact(&mut [0u8; 4])?; // throw away the first four bytes
-                    IpAddr::V6(Ipv6Addr::new(
-                        raw.read_u16::<NetworkEndian>()?,
-                        raw.read_u16::<NetworkEndian>()?,
-                        raw.read_u16::<NetworkEndian>()?,
-                        raw.read_u16::<NetworkEndian>()?,
-                        raw.read_u16::<NetworkEndian>()?,
-                        raw.read_u16::<NetworkEndian>()?,
-                        raw.read_u16::<NetworkEndian>()?,
-                        raw.read_u16::<NetworkEndian>()?,
-                    ))
+                    let mut octets = [0u8; IPV6_ADDRESS_SIZE as usize];
+                    octets.copy_from_slice(&raw[4..20]);
+                    IpAddr::V6(Ipv6Addr::from(octets))
                 }
                 _ => panic!("Unknown Internet Protocol Version!"),
             },
