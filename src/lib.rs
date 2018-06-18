@@ -373,27 +373,27 @@ impl FromSql for MaskedIpAddr {
 
 impl ToSql for MaskedIpAddr {
     fn to_sql(&self, ty: &Type, w: &mut Vec<u8>) -> Result<IsNull, Box<Error + Sync + Send>> {
-        // We're relying on the optimizer to clean this up.
-
-        w.push(match self.addr {
+        // Send the Address Header
+        w.extend_from_slice(&[
             // Address Family
-            IpAddr::V4(_) => IPV4_ADDRESS_FAMILY,
-            IpAddr::V6(_) => IPV6_ADDRESS_FAMILY,
-        });
-        w.push(self.mask); // Subnet mask
-        w.push(match *ty {
-            // cidr
-            types::CIDR => true as u8,
-            types::INET => false as u8,
-            _ => unreachable!(),
-        });
-        w.push(match self.addr {
-            IpAddr::V4(_) => IPV4_ADDRESS_SIZE,
-            IpAddr::V6(_) => IPV6_ADDRESS_SIZE,
-        });
+            match self.addr {
+                IpAddr::V4(_) => IPV4_ADDRESS_FAMILY,
+                IpAddr::V6(_) => IPV6_ADDRESS_FAMILY,
+            },
+            // Network Mask
+            self.mask,
+            // Is this a CIDR?
+            (*ty == types::CIDR) as u8,
+            // Address Size
+            match self.addr {
+                IpAddr::V4(_) => IPV4_ADDRESS_SIZE,
+                IpAddr::V6(_) => IPV6_ADDRESS_SIZE,
+            },
+        ]);
+
+        // Send the actual Address
         match self.addr {
             IpAddr::V4(ipv4) => w.extend_from_slice(&ipv4.octets()),
-            // Luckily, ipv6.octets() outputs in Network Byte Order.
             IpAddr::V6(ipv6) => w.extend_from_slice(&ipv6.octets()),
         };
 
