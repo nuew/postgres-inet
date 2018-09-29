@@ -378,14 +378,20 @@ impl FromSql for MaskedIpAddr {
         // well. A bool of the `cidr`ness is at raw[2]. It's also unneeded, as it
         // doesn't affect our codepath in any way whatsoever.
 
+        macro_rules! copy_address {
+            ($num_bytes:expr) => {{
+                const NUM_BYTES: usize = $num_bytes;
+
+                let mut octets = [0u8; NUM_BYTES];
+                octets.copy_from_slice(&raw[4..(NUM_BYTES + 4)]);
+                IpAddr::from(octets)
+            }};
+        }
+
         Ok(MaskedIpAddr {
             addr: match raw[3] {
-                IPV4_ADDRESS_SIZE => IpAddr::V4(Ipv4Addr::new(raw[4], raw[5], raw[6], raw[7])),
-                IPV6_ADDRESS_SIZE => {
-                    let mut octets = [0u8; IPV6_ADDRESS_SIZE as usize];
-                    octets.copy_from_slice(&raw[4..20]);
-                    IpAddr::V6(Ipv6Addr::from(octets))
-                }
+                IPV4_ADDRESS_SIZE => copy_address!(IPV4_ADDRESS_SIZE as usize),
+                IPV6_ADDRESS_SIZE => copy_address!(IPV6_ADDRESS_SIZE as usize),
                 _ => panic!("Unknown Internet Protocol Version!"),
             },
             cidr: raw[1],
@@ -397,6 +403,16 @@ impl FromSql for MaskedIpAddr {
 
 impl ToSql for MaskedIpAddr {
     fn to_sql(&self, ty: &Type, w: &mut Vec<u8>) -> Result<IsNull, Box<Error + Sync + Send>> {
+        fn address_size(addr: IpAddr) -> u8 {
+            match addr {
+                IpAddr::V4(_) => IPV4_ADDRESS_SIZE,
+                IpAddr::V6(_) => IPV6_ADDRESS_SIZE,
+            }
+        }
+
+        // Reserve Expected Additional Capacity
+        w.reserve(4 + address_size(self.addr) as usize);
+
         // Send the Address Header
         w.extend_from_slice(&[
             // Address Family
@@ -409,10 +425,7 @@ impl ToSql for MaskedIpAddr {
             // Is this a CIDR?
             (*ty == types::CIDR) as u8,
             // Address Size
-            match self.addr {
-                IpAddr::V4(_) => IPV4_ADDRESS_SIZE,
-                IpAddr::V6(_) => IPV6_ADDRESS_SIZE,
-            },
+            address_size(self.addr),
         ]);
 
         // Send the actual Address
@@ -482,12 +495,9 @@ impl FromStr for MaskedIpAddr {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let parts: Vec<&str> = s.split('/').collect();
-        match parts.len() {
-            1 => Ok(IpAddr::from_str(parts[0])?.into()),
-            2 => Ok(MaskedIpAddr::new(
-                IpAddr::from_str(parts[0])?,
-                parts[1].parse()?,
-            )),
+        match &parts[..] {
+            [ip] => Ok(IpAddr::from_str(ip)?.into()),
+            [ip, cidr] => Ok(MaskedIpAddr::new(IpAddr::from_str(ip)?, cidr.parse()?)),
             _ => Err(MaskedIpAddrParseError::Format),
         }
     }
