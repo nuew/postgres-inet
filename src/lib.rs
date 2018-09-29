@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Provides Cidr and Inet support for [`postgres`][1].
+//! Provides CIDR and Inet support for [`postgres`][1].
 //!
 //! Unlike several other names of this pattern, this is not affiliated
 //! with or supported by the [author][2] of [`postgres`][1].
@@ -23,9 +23,17 @@
 //! [2]: https://github.com/sfackler
 #![doc(html_root_url = "https://docs.rs/postgres-inet/0.15.1")]
 #![deny(
-    missing_copy_implementations, missing_debug_implementations, missing_docs, trivial_casts,
-    trivial_numeric_casts, unsafe_code, unstable_features, unused_extern_crates,
-    unused_import_braces, unused_qualifications, unused_results
+    missing_copy_implementations,
+    missing_debug_implementations,
+    missing_docs,
+    trivial_casts,
+    trivial_numeric_casts,
+    unsafe_code,
+    unstable_features,
+    unused_extern_crates,
+    unused_import_braces,
+    unused_qualifications,
+    unused_results
 )]
 
 #[cfg(feature = "ipnetwork")]
@@ -43,20 +51,22 @@ use std::net::{AddrParseError, IpAddr, Ipv4Addr, Ipv6Addr};
 use std::num::ParseIntError;
 use std::str::FromStr;
 
-const IPV4_NETMASK_FULL: u8 = 32;
+const IPV4_CIDR_FULL: u8 = 32;
 const IPV4_ADDRESS_FAMILY: u8 = 2; // AF_INET (See Issue #1)
 const IPV4_ADDRESS_SIZE: u8 = 4;
 
-const IPV6_NETMASK_FULL: u8 = 128;
+const IPV6_CIDR_FULL: u8 = 128;
 // Not AF_INET6; see postgres src/include/utils/inet.h
 const IPV6_ADDRESS_FAMILY: u8 = IPV4_ADDRESS_FAMILY + 1;
 const IPV6_ADDRESS_SIZE: u8 = 16;
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, PartialOrd, Ord)]
-/// An IP address with a netmask.
+/// An IP address, if necessary in [CIDR notation].
+///
+/// [CIDR notation]: https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation
 pub struct MaskedIpAddr {
     addr: IpAddr,
-    mask: u8,
+    cidr: u8,
 }
 
 impl MaskedIpAddr {
@@ -67,7 +77,7 @@ impl MaskedIpAddr {
     ///
     /// # Panics
     ///
-    /// Panics if the netmask is greater than 32 for an [IPv4 address], or is
+    /// Panics if the CIDR is greater than 32 for an [IPv4 address], or is
     /// greater than 128 for an [IPv6 address].
     ///
     /// [IPv4 address]: https://doc.rust-lang.org/std/net/enum.IpAddr.html#variant.V4
@@ -92,17 +102,17 @@ impl MaskedIpAddr {
     /// let network = Ipv6Addr::new(0x2001, 0x0DB8, 0, 0, 0, 0, 0, 0);
     /// MaskedIpAddr::new(network, 32);
     /// ```
-    pub fn new<I: Into<IpAddr>>(addr: I, mask: u8) -> MaskedIpAddr {
+    pub fn new<I: Into<IpAddr>>(addr: I, cidr: u8) -> MaskedIpAddr {
         let addr = addr.into();
 
         if match addr {
-            IpAddr::V4(_) => mask > IPV4_NETMASK_FULL,
-            IpAddr::V6(_) => mask > IPV6_NETMASK_FULL,
+            IpAddr::V4(_) => cidr > IPV4_CIDR_FULL,
+            IpAddr::V6(_) => cidr > IPV6_CIDR_FULL,
         } {
-            panic!("Mask {} too big for {:?}!", mask, addr);
+            panic!("CIDR {} too big for {:?}!", cidr, addr);
         }
 
-        MaskedIpAddr { addr, mask }
+        MaskedIpAddr { addr, cidr }
     }
 
     /// Returns [`true`] for the special 'unspecified' address.
@@ -223,7 +233,21 @@ impl MaskedIpAddr {
         self.addr
     }
 
-    /// Returns the contained netmask.
+    /// Returns the contained CIDR.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use postgres_inet::MaskedIpAddr;
+    /// # use std::net::{Ipv4Addr, Ipv6Addr};
+    /// assert_eq!(MaskedIpAddr::new(Ipv4Addr::new(192, 0, 2, 142), 32).cidr(), 32);
+    /// assert_eq!(MaskedIpAddr::new(Ipv6Addr::new(0x2001, 0x0DB8, 0, 0, 0, 0, 0, 0), 64).cidr(), 64);
+    /// ```
+    pub fn cidr(&self) -> u8 {
+        self.cidr
+    }
+
+    /// Returns the contained CIDR.
     ///
     /// # Examples
     ///
@@ -233,8 +257,13 @@ impl MaskedIpAddr {
     /// assert_eq!(MaskedIpAddr::new(Ipv4Addr::new(192, 0, 2, 142), 32).netmask(), 32);
     /// assert_eq!(MaskedIpAddr::new(Ipv6Addr::new(0x2001, 0x0DB8, 0, 0, 0, 0, 0, 0), 64).netmask(), 64);
     /// ```
+    #[deprecated(
+        since = "0.15.2",
+        note = "Supported because of historical (and wrong) use of netmask instead of CIDR. \
+                Use MaskedIpAddr::cidr instead."
+    )]
     pub fn netmask(&self) -> u8 {
-        self.mask
+        self.cidr()
     }
 
     /// Consumes the `MaskedIpAddr`, returning the IP address and netmask.
@@ -248,7 +277,7 @@ impl MaskedIpAddr {
     /// assert_eq!(MaskedIpAddr::new(network, 24).into_inner(), (network.into(), 24));
     /// ```
     pub fn into_inner(self) -> (IpAddr, u8) {
-        (self.addr, self.mask)
+        (self.addr, self.cidr)
     }
 }
 
@@ -256,7 +285,7 @@ impl From<Ipv4Addr> for MaskedIpAddr {
     fn from(ipv4: Ipv4Addr) -> MaskedIpAddr {
         MaskedIpAddr {
             addr: IpAddr::V4(ipv4),
-            mask: IPV4_NETMASK_FULL,
+            cidr: IPV4_CIDR_FULL,
         }
     }
 }
@@ -265,7 +294,7 @@ impl From<Ipv6Addr> for MaskedIpAddr {
     fn from(ipv6: Ipv6Addr) -> MaskedIpAddr {
         MaskedIpAddr {
             addr: IpAddr::V6(ipv6),
-            mask: IPV6_NETMASK_FULL,
+            cidr: IPV6_CIDR_FULL,
         }
     }
 }
@@ -273,9 +302,9 @@ impl From<Ipv6Addr> for MaskedIpAddr {
 impl From<IpAddr> for MaskedIpAddr {
     fn from(ip: IpAddr) -> MaskedIpAddr {
         MaskedIpAddr {
-            mask: match ip {
-                IpAddr::V4(_) => IPV4_NETMASK_FULL,
-                IpAddr::V6(_) => IPV6_NETMASK_FULL,
+            cidr: match ip {
+                IpAddr::V4(_) => IPV4_CIDR_FULL,
+                IpAddr::V6(_) => IPV6_CIDR_FULL,
             },
             addr: ip,
         }
@@ -317,20 +346,20 @@ impl From<ipnetwork::IpNetwork> for MaskedIpAddr {
 impl From<MaskedIpAddr> for ipnetwork::IpNetwork {
     fn from(mip: MaskedIpAddr) -> ipnetwork::IpNetwork {
         // this conversion will never fail
-        ipnetwork::IpNetwork::new(mip.address(), mip.netmask()).unwrap()
+        ipnetwork::IpNetwork::new(mip.address(), mip.cidr()).unwrap()
     }
 }
 
 impl fmt::Display for MaskedIpAddr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.addr {
-            IpAddr::V4(ipv4) => match self.mask {
-                IPV4_NETMASK_FULL => ipv4.fmt(f),
-                _ => write!(f, "{}/{}", ipv4, self.mask),
+            IpAddr::V4(ipv4) => match self.cidr {
+                IPV4_CIDR_FULL => ipv4.fmt(f),
+                _ => write!(f, "{}/{}", ipv4, self.cidr),
             },
-            IpAddr::V6(ipv6) => match self.mask {
-                IPV6_NETMASK_FULL => ipv6.fmt(f),
-                _ => write!(f, "{}/{}", ipv6, self.mask),
+            IpAddr::V6(ipv6) => match self.cidr {
+                IPV6_CIDR_FULL => ipv6.fmt(f),
+                _ => write!(f, "{}/{}", ipv6, self.cidr),
             },
         }
     }
@@ -338,7 +367,7 @@ impl fmt::Display for MaskedIpAddr {
 
 impl fmt::Debug for MaskedIpAddr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}/{}", self.addr, self.mask)
+        write!(f, "{}/{}", self.addr, self.cidr)
     }
 }
 
@@ -359,7 +388,7 @@ impl FromSql for MaskedIpAddr {
                 }
                 _ => panic!("Unknown Internet Protocol Version!"),
             },
-            mask: raw[1],
+            cidr: raw[1],
         })
     }
 
@@ -376,7 +405,7 @@ impl ToSql for MaskedIpAddr {
                 IpAddr::V6(_) => IPV6_ADDRESS_FAMILY,
             },
             // Network Mask
-            self.mask,
+            self.cidr,
             // Is this a CIDR?
             (*ty == types::CIDR) as u8,
             // Address Size
@@ -424,7 +453,7 @@ impl fmt::Display for MaskedIpAddrParseError {
 
 impl Error for MaskedIpAddrParseError {
     fn description(&self) -> &str {
-        "invalid IP address/netmask syntax"
+        "invalid CIDR syntax"
     }
 
     fn cause(&self) -> Option<&Error> {
