@@ -24,7 +24,8 @@ fn _db() -> Connection {
     conn.execute(
         "CREATE TEMPORARY TABLE foo (id SERIAL PRIMARY KEY, cidr CIDR, inet INET)",
         &[],
-    ).unwrap();
+    )
+    .unwrap();
     conn
 }
 
@@ -51,7 +52,7 @@ fn _new_masked_ipv4() -> (MaskedIpAddr, IpAddr, u8) {
 
 fn _new_masked_ipv6() -> (MaskedIpAddr, IpAddr, u8) {
     let expected = IpAddr::V6(Ipv6Addr::new(0x2001, 0xDB8, 0, 0, 0, 0, 0, 0));
-    let cidr = 32;
+    let cidr = 48;
 
     (MaskedIpAddr::new(expected, cidr), expected, cidr)
 }
@@ -240,6 +241,18 @@ fn netmask_ipv4() {
 fn netmask_ipv6() {
     let (mip, _, cidr) = _new_full_ipv6();
     assert_eq!(mip.netmask(), cidr);
+}
+
+#[test]
+fn subnet_mask_v4() {
+    let (mip, _, _) = _new_masked_ipv4();
+    assert_eq!(mip.subnet_mask(), 0xffffff00);
+}
+
+#[test]
+fn subnet_mask_v6() {
+    let (mip, _, _) = _new_masked_ipv6();
+    assert_eq!(mip.subnet_mask(), 0xffffffffffff00000000000000000000);
 }
 
 #[test]

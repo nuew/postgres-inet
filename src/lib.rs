@@ -266,6 +266,18 @@ impl MaskedIpAddr {
         self.cidr()
     }
 
+    /// Returns the subnet mask, calculated from the CIDR.
+    pub fn subnet_mask(&self) -> u128 {
+        fn cidr2mask(full_cidr: u8, cidr: u8, max: u128) -> u128 {
+            (!((1 << full_cidr - cidr) - 1)) & max
+        }
+
+        match self.addr {
+            IpAddr::V4(_) => cidr2mask(IPV4_CIDR_FULL, self.cidr, std::u32::MAX as u128),
+            IpAddr::V6(_) => cidr2mask(IPV6_CIDR_FULL, self.cidr, std::u128::MAX),
+        }
+    }
+
     /// Consumes the `MaskedIpAddr`, returning the IP address and netmask.
     ///
     /// # Examples
