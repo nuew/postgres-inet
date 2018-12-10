@@ -21,7 +21,7 @@
 //!
 //! [1]: https://crates.io/crates/postgres
 //! [2]: https://github.com/sfackler
-#![doc(html_root_url = "https://docs.rs/postgres-inet/0.15.1")]
+#![doc(html_root_url = "https://docs.rs/postgres-inet/0.15.2")]
 #![deny(
     missing_copy_implementations,
     missing_debug_implementations,

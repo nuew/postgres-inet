@@ -1,6 +1,6 @@
 [package]
 name = "postgres-inet"
-version = "0.15.1" # remember to update docroot
+version = "0.15.2" # remember to update docroot
 authors = ["Nuew <code@nuew.net>"]
 license = "Apache-2.0"
 description = "(Unofficial) Cidr and Inet support for rust-postgres"
