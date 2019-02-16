@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #![cfg(test)]
-#![allow(unused_results)]
 
 use super::*;
 use postgres::{Connection, TlsMode};
