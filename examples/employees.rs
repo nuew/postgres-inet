@@ -48,17 +48,20 @@ fn main() {
             workstation INET NOT NULL
         )",
         &[],
-    ).unwrap();
+    )
+    .unwrap();
 
     for employee in employees {
         let workstation: MaskedIpAddr = From::from(employee.workstation);
         conn.execute(
             "INSERT INTO employees (name, network, workstation) VALUES ($1, $2, $3)",
             &[&employee.name, &employee.network, &workstation],
-        ).unwrap();
+        )
+        .unwrap();
     }
 
-    for row in &conn.query("SELECT name, network, workstation FROM employees", &[])
+    for row in &conn
+        .query("SELECT name, network, workstation FROM employees", &[])
         .unwrap()
     {
         let workstation: MaskedIpAddr = row.get(2);
