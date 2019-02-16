@@ -15,5 +15,5 @@ travis-ci = { repository = "nuew/postgres-inet", branch = "master" }
 maintenance = { status = "passively-maintained" }
 
 [dependencies]
-ipnetwork = { version = "0.13", optional = true }
+ipnetwork = { version = ">=0.7, <0.15", optional = true }
 postgres = "0.15"
