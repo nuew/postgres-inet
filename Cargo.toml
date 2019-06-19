@@ -16,4 +16,7 @@ maintenance = { status = "passively-maintained" }
 
 [dependencies]
 ipnetwork = { version = ">=0.7, <0.15", optional = true }
+postgres-shared = "0.4"
+
+[dev-dependencies]
 postgres = "0.15"

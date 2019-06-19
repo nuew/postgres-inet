@@ -37,12 +37,15 @@
 #[cfg(feature = "ipnetwork")]
 extern crate ipnetwork;
 
-#[macro_use]
+#[cfg(test)]
 extern crate postgres;
+
+#[macro_use]
+extern crate postgres_shared;
 
 mod tests;
 
-use postgres::types::{self, FromSql, IsNull, ToSql, Type};
+use postgres_shared::types::{self, FromSql, IsNull, ToSql, Type};
 use std::error::Error;
 use std::fmt;
 use std::net::{AddrParseError, IpAddr, Ipv4Addr, Ipv6Addr};
