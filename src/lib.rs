@@ -270,11 +270,11 @@ impl MaskedIpAddr {
     /// Returns the subnet mask, calculated from the CIDR.
     pub fn subnet_mask(&self) -> u128 {
         fn cidr2mask(full_cidr: u8, cidr: u8, max: u128) -> u128 {
-            (!((1 << full_cidr - cidr) - 1)) & max
+            (!((1 << (full_cidr - cidr)) - 1)) & max
         }
 
         match self.addr {
-            IpAddr::V4(_) => cidr2mask(IPV4_CIDR_FULL, self.cidr, std::u32::MAX as u128),
+            IpAddr::V4(_) => cidr2mask(IPV4_CIDR_FULL, self.cidr, u128::from(std::u32::MAX)),
             IpAddr::V6(_) => cidr2mask(IPV6_CIDR_FULL, self.cidr, std::u128::MAX),
         }
     }
@@ -385,7 +385,7 @@ impl fmt::Debug for MaskedIpAddr {
 }
 
 impl FromSql for MaskedIpAddr {
-    fn from_sql(_: &Type, raw: &[u8]) -> Result<Self, Box<Error + 'static + Sync + Send>> {
+    fn from_sql(_: &Type, raw: &[u8]) -> Result<Self, Box<dyn Error + 'static + Sync + Send>> {
         // The address family is at raw[0], as AF_INET for ipv4 or (AF_INET + 1)
         // for ipv6.  It's unneeded, as `nb` at raw[3] tells us the version just as
         // well. A bool of the `cidr`ness is at raw[2]. It's also unneeded, as it
@@ -415,7 +415,7 @@ impl FromSql for MaskedIpAddr {
 }
 
 impl ToSql for MaskedIpAddr {
-    fn to_sql(&self, ty: &Type, w: &mut Vec<u8>) -> Result<IsNull, Box<Error + Sync + Send>> {
+    fn to_sql(&self, ty: &Type, w: &mut Vec<u8>) -> Result<IsNull, Box<dyn Error + Sync + Send>> {
         fn address_size(addr: IpAddr) -> u8 {
             match addr {
                 IpAddr::V4(_) => IPV4_ADDRESS_SIZE,
@@ -482,7 +482,7 @@ impl Error for MaskedIpAddrParseError {
         "invalid CIDR syntax"
     }
 
-    fn cause(&self) -> Option<&Error> {
+    fn cause(&self) -> Option<&dyn Error> {
         match *self {
             MaskedIpAddrParseError::Address(ref err) => Some(err),
             MaskedIpAddrParseError::Netmask(ref err) => Some(err),
