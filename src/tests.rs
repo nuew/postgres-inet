@@ -15,11 +15,11 @@
 #![cfg(test)]
 
 use super::*;
-use postgres::{Connection, TlsMode};
+use postgres::{Client, NoTls};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
-fn _db() -> Connection {
-    let conn = Connection::connect("postgres://postgres@localhost", TlsMode::None).unwrap();
+fn _db() -> Client {
+    let mut conn = Client::connect("postgres://postgres@localhost", NoTls).unwrap();
     conn.execute(
         "CREATE TEMPORARY TABLE foo (id SERIAL PRIMARY KEY, cidr CIDR, inet INET)",
         &[],
@@ -506,7 +506,7 @@ fn inet_insert_masked_ipv6() {
 
 #[test]
 fn cidr_insert_and_select_full_ipv4() {
-    let db = _db();
+    let mut db = _db();
     let (mip, _, _) = _new_full_ipv4();
 
     db.execute("INSERT INTO foo (cidr) VALUES ($1)", &[&mip])
@@ -516,13 +516,14 @@ fn cidr_insert_and_select_full_ipv4() {
         .query("SELECT cidr FROM foo LIMIT 1", &[])
         .unwrap()
         .get(0)
+        .unwrap()
         .get(0);
     assert_eq!(mip, mip_b);
 }
 
 #[test]
 fn cidr_insert_and_select_full_ipv6() {
-    let db = _db();
+    let mut db = _db();
     let (mip, _, _) = _new_full_ipv6();
 
     db.execute("INSERT INTO foo (cidr) VALUES ($1)", &[&mip])
@@ -532,13 +533,14 @@ fn cidr_insert_and_select_full_ipv6() {
         .query("SELECT cidr FROM foo LIMIT 1", &[])
         .unwrap()
         .get(0)
+        .unwrap()
         .get(0);
     assert_eq!(mip, mip_b);
 }
 
 #[test]
 fn cidr_insert_and_select_masked_ipv4() {
-    let db = _db();
+    let mut db = _db();
     let (mip, _, _) = _new_masked_ipv4();
 
     db.execute("INSERT INTO foo (cidr) VALUES ($1)", &[&mip])
@@ -548,13 +550,14 @@ fn cidr_insert_and_select_masked_ipv4() {
         .query("SELECT cidr FROM foo LIMIT 1", &[])
         .unwrap()
         .get(0)
+        .unwrap()
         .get(0);
     assert_eq!(mip, mip_b);
 }
 
 #[test]
 fn cidr_insert_and_select_masked_ipv6() {
-    let db = _db();
+    let mut db = _db();
     let (mip, _, _) = _new_masked_ipv6();
 
     db.execute("INSERT INTO foo (cidr) VALUES ($1)", &[&mip])
@@ -564,13 +567,14 @@ fn cidr_insert_and_select_masked_ipv6() {
         .query("SELECT cidr FROM foo LIMIT 1", &[])
         .unwrap()
         .get(0)
+        .unwrap()
         .get(0);
     assert_eq!(mip, mip_b);
 }
 
 #[test]
 fn inet_insert_and_select_full_ipv4() {
-    let db = _db();
+    let mut db = _db();
     let (mip, _, _) = _new_full_ipv4();
 
     db.execute("INSERT INTO foo (inet) VALUES ($1)", &[&mip])
@@ -580,13 +584,14 @@ fn inet_insert_and_select_full_ipv4() {
         .query("SELECT inet FROM foo LIMIT 1", &[])
         .unwrap()
         .get(0)
+        .unwrap()
         .get(0);
     assert_eq!(mip, mip_b);
 }
 
 #[test]
 fn inet_insert_and_select_full_ipv6() {
-    let db = _db();
+    let mut db = _db();
     let (mip, _, _) = _new_full_ipv6();
 
     db.execute("INSERT INTO foo (inet) VALUES ($1)", &[&mip])
@@ -596,13 +601,14 @@ fn inet_insert_and_select_full_ipv6() {
         .query("SELECT inet FROM foo LIMIT 1", &[])
         .unwrap()
         .get(0)
+        .unwrap()
         .get(0);
     assert_eq!(mip, mip_b);
 }
 
 #[test]
 fn inet_insert_and_select_masked_ipv4() {
-    let db = _db();
+    let mut db = _db();
     let (mip, _, _) = _new_masked_ipv4();
 
     db.execute("INSERT INTO foo (inet) VALUES ($1)", &[&mip])
@@ -612,13 +618,14 @@ fn inet_insert_and_select_masked_ipv4() {
         .query("SELECT inet FROM foo LIMIT 1", &[])
         .unwrap()
         .get(0)
+        .unwrap()
         .get(0);
     assert_eq!(mip, mip_b);
 }
 
 #[test]
 fn inet_insert_and_select_masked_ipv6() {
-    let db = _db();
+    let mut db = _db();
     let (mip, _, _) = _new_masked_ipv6();
 
     db.execute("INSERT INTO foo (inet) VALUES ($1)", &[&mip])
@@ -628,6 +635,7 @@ fn inet_insert_and_select_masked_ipv6() {
         .query("SELECT inet FROM foo LIMIT 1", &[])
         .unwrap()
         .get(0)
+        .unwrap()
         .get(0);
     assert_eq!(mip, mip_b);
 }

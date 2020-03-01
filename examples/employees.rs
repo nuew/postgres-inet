@@ -15,7 +15,7 @@
 extern crate postgres;
 extern crate postgres_inet;
 
-use postgres::{Connection, TlsMode};
+use postgres::{Client, NoTls};
 use postgres_inet::MaskedIpAddr;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
@@ -38,7 +38,7 @@ fn main() {
             workstation: IpAddr::V6(Ipv6Addr::new(0x2001, 0x0DB8, 0, 0, 0, 0, 0, 0xC513)),
         },
     ];
-    let conn = Connection::connect("postgres://postgres@localhost", TlsMode::None).unwrap();
+    let mut conn = Client::connect("postgres://postgres@localhost", NoTls).unwrap();
 
     conn.execute(
         "CREATE TABLE employees (

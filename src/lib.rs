@@ -40,12 +40,14 @@ extern crate ipnetwork;
 #[cfg(test)]
 extern crate postgres;
 
+extern crate bytes;
 #[macro_use]
-extern crate postgres_shared;
+extern crate postgres_types;
 
 mod tests;
 
-use postgres_shared::types::{self, FromSql, IsNull, ToSql, Type};
+use bytes::BytesMut;
+use postgres_types::{FromSql, IsNull, ToSql, Type};
 use std::error::Error;
 use std::fmt;
 use std::net::{AddrParseError, IpAddr, Ipv4Addr, Ipv6Addr};
@@ -384,7 +386,7 @@ impl fmt::Debug for MaskedIpAddr {
     }
 }
 
-impl FromSql for MaskedIpAddr {
+impl FromSql<'_> for MaskedIpAddr {
     fn from_sql(_: &Type, raw: &[u8]) -> Result<Self, Box<dyn Error + 'static + Sync + Send>> {
         // The address family is at raw[0], as AF_INET for ipv4 or (AF_INET + 1)
         // for ipv6.  It's unneeded, as `nb` at raw[3] tells us the version just as
@@ -411,11 +413,13 @@ impl FromSql for MaskedIpAddr {
         })
     }
 
-    accepts!(types::CIDR, types::INET);
+    fn accepts(ty: &Type) -> bool {
+        *ty == Type::INET || *ty == Type::CIDR
+    }
 }
 
 impl ToSql for MaskedIpAddr {
-    fn to_sql(&self, ty: &Type, w: &mut Vec<u8>) -> Result<IsNull, Box<dyn Error + Sync + Send>> {
+    fn to_sql(&self, ty: &Type, w: &mut BytesMut) -> Result<IsNull, Box<dyn Error + Sync + Send>> {
         fn address_size(addr: IpAddr) -> u8 {
             match addr {
                 IpAddr::V4(_) => IPV4_ADDRESS_SIZE,
@@ -436,7 +440,7 @@ impl ToSql for MaskedIpAddr {
             // Network Mask
             self.cidr,
             // Is this a CIDR?
-            (*ty == types::CIDR) as u8,
+            (*ty == Type::CIDR) as u8,
             // Address Size
             address_size(self.addr),
         ]);
@@ -450,7 +454,10 @@ impl ToSql for MaskedIpAddr {
         Ok(IsNull::No)
     }
 
-    accepts!(types::CIDR, types::INET);
+    fn accepts(ty: &Type) -> bool {
+        *ty == Type::INET || *ty == Type::CIDR
+    }
+
     to_sql_checked!();
 }
 

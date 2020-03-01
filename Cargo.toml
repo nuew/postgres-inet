@@ -1,9 +1,9 @@
 [package]
 name = "postgres-inet"
-version = "0.15.4" # remember to update docroot
+version = "0.17.0"
 authors = ["Nuew <code@nuew.net>"]
 license = "Apache-2.0"
-description = "(Unofficial) Cidr and Inet support for rust-postgres"
+description = "CIDR/INET support for rust-postgres"
 repository = "https://github.com/nuew/postgres-inet"
 documentation = "https://docs.rs/postgres-inet"
 readme = "README.md"
@@ -15,8 +15,9 @@ travis-ci = { repository = "nuew/postgres-inet", branch = "master" }
 maintenance = { status = "passively-maintained" }
 
 [dependencies]
-ipnetwork = { version = ">=0.7, <0.15", optional = true }
-postgres-shared = "0.4"
+bytes = "0.5"
+ipnetwork = { version = ">=0.7, <0.16", optional = true }
+postgres-types = "0.1"
 
 [dev-dependencies]
-postgres = "0.15"
+postgres = "0.17"
