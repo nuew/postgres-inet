@@ -34,6 +34,8 @@
     unused_import_braces
 )]
 
+extern crate bytes;
+
 #[cfg(feature = "ipnetwork")]
 extern crate ipnetwork;
 
@@ -45,7 +47,7 @@ extern crate postgres_types;
 
 mod tests;
 
-use postgres_types::private::BytesMut;
+use bytes::BytesMut;
 use postgres_types::{FromSql, IsNull, ToSql, Type};
 use std::error::Error;
 use std::fmt;
@@ -484,7 +486,6 @@ impl fmt::Display for MaskedIpAddrParseError {
 }
 
 impl Error for MaskedIpAddrParseError {
-
     fn cause(&self) -> Option<&dyn Error> {
         match *self {
             MaskedIpAddrParseError::Address(ref err) => Some(err),
