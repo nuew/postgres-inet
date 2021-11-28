@@ -40,13 +40,12 @@ extern crate ipnetwork;
 #[cfg(test)]
 extern crate postgres;
 
-extern crate bytes;
 #[macro_use]
 extern crate postgres_types;
 
 mod tests;
 
-use bytes::BytesMut;
+use postgres_types::private::BytesMut;
 use postgres_types::{FromSql, IsNull, ToSql, Type};
 use std::error::Error;
 use std::fmt;
@@ -479,15 +478,12 @@ impl fmt::Display for MaskedIpAddrParseError {
         match *self {
             MaskedIpAddrParseError::Address(ref e) => e.fmt(f),
             MaskedIpAddrParseError::Netmask(ref e) => e.fmt(f),
-            MaskedIpAddrParseError::Format => f.write_str(self.description()),
+            MaskedIpAddrParseError::Format => f.write_str("invalid CIDR syntax"),
         }
     }
 }
 
 impl Error for MaskedIpAddrParseError {
-    fn description(&self) -> &str {
-        "invalid CIDR syntax"
-    }
 
     fn cause(&self) -> Option<&dyn Error> {
         match *self {
